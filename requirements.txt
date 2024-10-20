@@ -1,0 +1,10 @@
+# need install ta_lib
+# brew install ta-lib
+TA-Lib
+futu-api
+matplotlib
+requests
+PyMySQL
+SQLAlchemy==1.4.51
+pandas
+flask

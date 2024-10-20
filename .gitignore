@@ -1,0 +1,14 @@
+.idea
+.DS_Store
+*.iml
+*.ipr
+*.iws
+*.swp
+*.swo
+*.bak
+*.tmp
+*.log
+*.out
+*.pyc
+*.pyo
+*.pyd
