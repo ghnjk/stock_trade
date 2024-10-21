@@ -18,7 +18,7 @@ def calc_expect_sell_price(buy_price: float, quantity: int) -> float:
     """
     total_buy_amount = buy_price * quantity
     buy_fee, _ = calc_hk_ext_fee(total_buy_amount)
-    return round((total_buy_amount + buy_fee * 2) / quantity, 2) + 0.01
+    return round((total_buy_amount + buy_fee * 2 * 2) / quantity, 2) + 0.01
     # for rate in [1.006, 1.007, 1.008, 1.009, 1.01, 1.02, 1.03, 1.04, 1.05, 1.06, 1.07, 1.08, 1.09,
     #              1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2, 3, 4, 5]:
     #     expect_sell_price = buy_price * rate

@@ -23,6 +23,9 @@ STOCK_CODE = "HK.00700"
 # STOCK_CODE = "HK.02628"
 ACCOUNT_INIT_BALANCE = 200000
 
+MOCK_START_DATE = "2024-10-10"
+MOCK_END_DATE = "2024-10-21"
+
 
 def prepare_mock_context():
     account_name = "mock_acc_" + date_utils.now_time_str("%Y%m%d_%H%M%S")
@@ -64,6 +67,7 @@ def prepare_kline_lib(stock_manager):
         stock_manager.stock_code,
         ctx.backend().stock_k_line_repo(stock_manager.stock_code),
         ctx.futu_sdk()
+        # , force_sync_from_futu=True
     )
     return lib
 
@@ -171,14 +175,14 @@ def mock_trade():
     trader = prepare_trader(stock_manager)
     trade_engine = TradeEngine(stock_manager, kline_lib, SimpleMaTradeAlg(), trader)
     print("加载历史K线数据...")
-    df = kline_lib.query("2023-01-01", "2024-10-18")
+    df = kline_lib.query("2018-01-01", MOCK_END_DATE)
     print("开始模拟交易...")
     start_mock_date = None
     end_mock_date = None
     last_price = 0
     for index, row in df.iterrows():
         row_dict = row.to_dict()
-        if row_dict["time_key"] < "2024-01-01":
+        if row_dict["time_key"] < MOCK_START_DATE:
             continue
         if row_dict["time_key"].endswith("09:30:00"):
             trade_date = row_dict["time_key"][:10]

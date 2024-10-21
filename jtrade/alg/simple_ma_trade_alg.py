@@ -158,13 +158,18 @@ class SimpleMaTradeAlg(TradeAlgBase):
                 )
         return pd.DataFrame(data, columns=["price", "sell_wait_time"])
 
-    def _calc_price_period(self, cur_price) -> typing.Tuple[float, float]:
+    def _calc_price_period(self, cur_price, stocks: typing.List[StockDto]) -> typing.Tuple[float, float]:
         """
         根据当前价格，计算股票价格的档位区间
         :param cur_price:
         :return:
         """
-        period_size = round(cur_price * 0.05, 2)
+        ratio_list = [0.05, 0.05, 0.10, 0.2, 0.3, 0.4, 0.5]
+        if len(stocks) >= len(ratio_list):
+            ratio = ratio_list[-1]
+        else:
+            ratio = ratio_list[len(stocks)]
+        period_size = round(cur_price * ratio, 2)
         period_begin = cur_price - period_size * 0.5
         period_end = period_begin + period_size
         return period_begin, period_end
@@ -186,12 +191,12 @@ class SimpleMaTradeAlg(TradeAlgBase):
         if self._check_above_history_sell(cur_price, alg_params["cur_timestamp"]):
             return False, -1, 0
         # 检测资金
-        if available_balance < buy_quantity * cur_price:
+        if available_balance < buy_quantity * cur_price + calc_expect_sell_price(cur_price, buy_quantity) + 1:
             # 资金不够
             # print(f"not enough balance: {available_balance} < {buy_quantity * cur_price}")
             return False, -1, 0
         # 检测是否有相同档位的股票
-        cur_price_period = self._calc_price_period(cur_price)
+        cur_price_period = self._calc_price_period(cur_price, stocks)
         for holding_id, stock in stocks.items():
             if cur_price_period[0] <= stock.buy_price <= cur_price_period[1]:
                 # 有相同档位的股票
@@ -208,6 +213,7 @@ class SimpleMaTradeAlg(TradeAlgBase):
             # print(f"{cur_time_str}: 股价 {cur_price} - 上行趋势后2/3 不买入")
             return False, -1, 0
         # 计算历史相似阶段的迈出预期时间
+        # todo
         his_sell_wait_time_df = self._gen_hist_sell_wait_time_df(
             y, cur_price_period
         )
@@ -217,8 +223,8 @@ class SimpleMaTradeAlg(TradeAlgBase):
         wait_p90 = np.percentile(his_sell_wait_time_df["sell_wait_time"], 90)
         wait_avg = np.mean(his_sell_wait_time_df["sell_wait_time"])
         day_period_count = 60 * 5.5
-        if wait_avg > day_period_count * 10 or wait_p90 > day_period_count * 20:
-            # print(f"{cur_time_str}: 股价 {cur_price} - 预测可卖出时间太长。 历史平均: {period_to_time(wait_avg)} P90： {period_to_time(wait_p90)}")
+        if wait_avg > day_period_count * 20 or wait_p90 > day_period_count * 40:
+            print(f"{cur_time_str}: 股价 {cur_price} - 预测可卖出时间太长。 历史平均: {period_to_time(wait_avg)} P90： {period_to_time(wait_p90)}")
             return False, -1, 0
         # 买入
         return True, cur_price, buy_quantity
